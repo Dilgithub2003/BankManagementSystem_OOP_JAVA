@@ -141,6 +141,7 @@ public class BankApp {
                 break;
 
                 case 4:
+                    System.out.println("----Get account balance----");
                     if(customer == null || account==null ){
                         System.out.println("Not found registered user or account");
                         break;
@@ -148,7 +149,10 @@ public class BankApp {
                     System.out.println("Your account balance is "+ account.getBalance() );
                     //double amount = input.nextDouble();
                     break;
+
+
                 case 5:
+                    System.out.println("----Deposite money----");
                     if(customer == null || account == null){
                         System.out.println("Not found registered user or account");
                         break;
@@ -176,7 +180,10 @@ public class BankApp {
 //                    System.out.println(transaction.getToAccount());
 //                    System.out.println(transaction.getState());
                     break;
+
+
                 case 6:
+                    System.out.println("----Withdraw money----");
                     if(customer == null || account == null){
                         System.out.println("Not found registered user or account");
                         break;
@@ -199,7 +206,10 @@ public class BankApp {
 
                     bankService.getTransactions().add(transaction);
                     break;
+
+
                 case 7:
+                    System.out.println("----Transfer money----");
                     if(customer == null || account == null){
                         System.out.println("Not found registered user or account");
                         break;
@@ -238,7 +248,10 @@ public class BankApp {
 
                     bankService.transfer(transferActionId,transfer,tdate,account,reviverAccount,"PENDING");
                     break;
+
+
                 case 8:
+                    System.out.println("----Select account----");
                     if (customer == null){
                         System.out.println("Please login or signup");
                     }
