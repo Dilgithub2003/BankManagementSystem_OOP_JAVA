@@ -60,4 +60,22 @@ This project demonstrates **Object-Oriented Programming concepts** including:
 ---
 
 ## 🏗️ Project Structure
-
+src/
+└── main/
+└── java/
+└── org/example/
+├── app/
+│ └── BankApp.java
+├── models/
+│ ├── User.java
+│ ├── Customer.java
+│ ├── Account.java
+│ ├── SavingAccount.java
+│ ├── CheckingAccount.java
+│ └── transactions/
+│ ├── Transaction.java
+│ ├── DepositTransaction.java
+│ ├── WithdrawTransaction.java
+│ └── TransferTransaction.java
+└── services/
+└── BankService.java
