@@ -1,6 +1,15 @@
 package org.example.services;
 
-import org.example.models.*;
+import org.example.accounts.CheckingAccount;
+import org.example.accounts.SavingAccount;
+import org.example.factory.TransactionFactory;
+import org.example.models.Account;
+import org.example.models.AccountType;
+import org.example.models.Customer;
+import org.example.models.User;
+import org.example.notify_observers.TransactionReceipt;
+import org.example.transactions.*;
+import org.example.transactions.decorators.FeeDecorator;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -10,6 +19,7 @@ public class BankService {
     private List<Customer> customers;
     private List<Transaction> transactions;
     private String bankName;
+    private Transaction transaction ;
 
     public BankService(String bankName ){
         this.customers = new ArrayList<>();
@@ -32,14 +42,14 @@ public class BankService {
         Account account = null;
         switch (type) {
             case "Saving":
-                SavingAccount savingAccount = new SavingAccount(accountNumber, balance, interestRate, owner, minimumBalance, withdrawLimit);
+                SavingAccount savingAccount = new SavingAccount(accountNumber, balance, owner, minimumBalance, withdrawLimit);
                 owner.getAccounts().add(savingAccount);
                 System.out.println(" Saving account created successfully.");
                 return savingAccount;
 
 
             case "Checking":
-                CheckingAccount checkingAccount = new CheckingAccount(accountNumber, balance, interestRate, owner, overdraftLimit);
+                CheckingAccount checkingAccount = new CheckingAccount(accountNumber, balance, owner, overdraftLimit);
                 owner.getAccounts().add(checkingAccount);
                 System.out.println(" Checking account created successfully.");
                 return checkingAccount;
@@ -72,24 +82,67 @@ public class BankService {
     }
 
 
+    public void depositMoney(String transactionId, double amount, Account account) {
 
-    public void depositMoney(String transactionId, double amount, LocalDateTime date, Account fromAccount, Account toAccount, String state){
-        DepositeTransaction depositeTransaction = new DepositeTransaction(transactionId, amount, date, fromAccount, toAccount);
-        depositeTransaction.execute();
-        transactions.add(depositeTransaction);
+        ITransaction tx = TransactionFactory.create(
+                TransactionType.DEPOSIT,
+                transactionId,
+                amount,
+                account,   // from
+                account    // to
+        );
+
+        // Add decorator
+        tx = new FeeDecorator(tx);
+
+        // Add observer (receipt)
+        account.addObserver(new TransactionReceipt(transaction));
+
+        // Execute
+        tx.execute();
+
+        // Log transaction
+        //transactions.add((Transaction) tx);
     }
 
-    public void withdrawMoney(String transactionId, double amount, LocalDateTime date, Account fromAccount, Account toAccount, String state){
-        WithdrawTransaction withdrawTransaction = new WithdrawTransaction(transactionId, amount, date, fromAccount, toAccount,state);
-        withdrawTransaction.execute();
-        transactions.add(withdrawTransaction);
+
+    public void withdrawMoney(String transactionId, double amount, Account account) {
+
+        ITransaction tx = TransactionFactory.create(
+                TransactionType.WITHDRAW,
+                transactionId,
+                amount,
+                account,   // from
+                account    // to (still account for receipt)
+        );
+
+        tx = new FeeDecorator(tx);
+        account.addObserver(new TransactionReceipt(transaction));
+
+        tx.execute();
+        //transactions.add((Transaction) tx);
     }
 
-    public void transfer(String trnsactionId, double amount, LocalDateTime date, Account fromAccount, Account toAccount, String state){
-        TransferTransaction transferTransaction = new TransferTransaction(trnsactionId, amount, date, fromAccount, toAccount, state);
-        transferTransaction.execute();
-        transactions.add(transferTransaction);
+
+    public void transferMoney(String transactionId, double amount, Account fromAcc, Account toAcc) {
+
+        ITransaction tx = TransactionFactory.create(
+                TransactionType.TRANSFER,
+                transactionId,
+                amount,
+                fromAcc,
+                toAcc
+        );
+
+        tx = new FeeDecorator(tx);
+
+        fromAcc.addObserver(new TransactionReceipt(transaction));
+        toAcc.addObserver(new TransactionReceipt(transaction));
+
+        tx.execute();
+        //transactions.add((Transaction) tx);
     }
+
 
     // Display all customers
     public void displayAllCustomers() {
@@ -108,14 +161,6 @@ public class BankService {
         System.out.println("\n===== Accounts for " + customer.getName() + " =====");
         for (Account acc : customer.getAccounts()) {
             System.out.println("Account No: " + acc.getAccountNumber() + " | Balance: " + acc.getBalance());
-        }
-    }
-
-    //  View all transactions
-    public void viewAllTransactions() {
-        System.out.println("\n===== All Transactions =====");
-        for (Transaction t : transactions) {
-            System.out.println("Transaction ID: " + t.getTrnsactionId() + " | Amount: " + t.getAmount());
         }
     }
 

@@ -1,8 +1,9 @@
 package org.example.models;
 
+import org.example.accounts.SavingAccount;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 public class Customer extends User {
     private List<Account> accounts;
@@ -60,7 +61,7 @@ public class Customer extends User {
     public Account selectAccount(int accountNum){
         int noOfAcc = 1;
         for (Account account:accounts ){
-            System.out.println(noOfAcc + "=>"+"Acc no." + account.getAccountNumber() + "Type" + (account instanceof SavingAccount?"Saving Account": "Checking Account"));
+            System.out.println(noOfAcc + "=>"+"Acc no." + account.getAccountNumber() + "Type" + (account instanceof SavingAccount ?"Saving Account": "Checking Account"));
             if(accountNum == account.getAccountNumber()){
                 return account;
             }

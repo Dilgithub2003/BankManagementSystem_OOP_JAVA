@@ -1,9 +1,8 @@
 package org.example.app;
 
-
 import org.example.models.*;
 import org.example.services.BankService;
-
+import org.example.transactions.Transaction;
 import java.time.LocalDateTime;
 import java.util.Scanner;
 
@@ -19,12 +18,11 @@ public class BankApp {
                 "6-> Withdraw money\n"+
                 "7-> Transfer funds\n"+
                 "8-> Select account\n"+
-                "9-> Logout\n"+
+                "9-> Calculate interest\n"+
+                "10-> Logout\n"+
                 "Choose option.."
         );
     }
-
-
 
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
@@ -47,20 +45,15 @@ public class BankApp {
                     System.out.println("Enter password");
                     String userpwd = input.nextLine();
 
+                    // Login customer
                     customer = bankService.loginCustomer(userEmail,userpwd);
+
                     if (customer == null){
                         System.out.println("Invalid user ID or Password");
                         break;
                     }else {
                         System.out.println("Autherization Successful ");
                     }
-                    System.out.println("\n"+customer.getUserId());
-                System.out.println(customer.getName());
-                System.out.println(customer.getAddress());
-                System.out.println(customer.getEmail());
-                System.out.println(customer.getPassword());
-                System.out.println(customer.getPhoneNumber());
-
                     break;
 
 
@@ -87,13 +80,9 @@ public class BankApp {
                     System.out.print("Enter phone number: ");
                     String phone = input.nextLine();
 
+                    // Registering customer
                     customer = bankService.createCustomer(userId, name, email, password, "Customer", address, phone);
-//                System.out.println("\n"+customer.getUserId());
-//                System.out.println(customer.getName());
-//                System.out.println(customer.getAddress());
-//                System.out.println(customer.getEmail());
-//                System.out.println(customer.getPassword());
-//                System.out.println(customer.getPhoneNumber());
+
                     break;
 
                 case 3:
@@ -122,23 +111,20 @@ public class BankApp {
                         System.out.print("Enter withdrawal limit: ");
                         double withdrawLimit = input.nextDouble();
 
+                        // Create Saving account
                         account = bankService.createAccount(type, accNum, balance, rate, customer, minBalance, withdrawLimit, 0);
+
+
                     } else {
                         System.out.print("Enter overdraft limit: ");
                         double overdraftLimit = input.nextDouble();
 
+                        // Create checking account
                         account = bankService.createAccount(type, accNum, balance, rate, customer, 0, 0, overdraftLimit);
+
                     }
-                    //                System.out.println("\n"+customer.getUserId());
-//                System.out.println(account.getAccountNumber());
-//                System.out.println(account.getInterestRate());
-//                System.out.println(account.getOwner());
-//                System.out.println(account.getBalance());
-//                if (account instanceof SavingAccount) {
-//                    SavingAccount sa = (SavingAccount) account;
-//                    System.out.println("Withdraw Limit: " + sa.getWithdrawLimit());
-//                }
-                break;
+
+                    break;
 
                 case 4:
                     System.out.println("----Get account balance----");
@@ -147,7 +133,6 @@ public class BankApp {
                         break;
                     }
                     System.out.println("Your account balance is "+ account.getBalance() );
-                    //double amount = input.nextDouble();
                     break;
 
 
@@ -170,15 +155,8 @@ public class BankApp {
                     Account fromAccount = account;
                     Account toAccount = account;
 
-                    transaction = new DepositeTransaction(transActionId, depositAmount, date, fromAccount, toAccount);
-                    transaction.execute();
+                    bankService.depositMoney(transActionId, depositAmount, fromAccount);
 
-                    bankService.getTransactions().add(transaction);
-//                    System.out.println(transaction.getAmount());
-//                    System.out.println(transaction.getDate());
-//                    System.out.println(transaction.getFromAccount());
-//                    System.out.println(transaction.getToAccount());
-//                    System.out.println(transaction.getState());
                     break;
 
 
@@ -197,16 +175,12 @@ public class BankApp {
                     String wtransActionId = input.nextLine();
 
                     LocalDateTime wdate = LocalDateTime.now();
-
                     Account wfromAccount = account;
                     Account wtoAccount = account;
 
-                    transaction = new WithdrawTransaction(wtransActionId, withdrawAmount, wdate, wfromAccount, wtoAccount, "Pending");
-                    transaction.execute();
+                    bankService.withdrawMoney(wtransActionId, withdrawAmount, account);
 
-                    bankService.getTransactions().add(transaction);
                     break;
-
 
                 case 7:
                     System.out.println("----Transfer money----");
@@ -222,20 +196,8 @@ public class BankApp {
                         System.out.println("Count find matching account !");
                         break;
                     }
-//                    System.out.println(reviverAccount.getAccountNumber());
-//                    System.out.println(reviverAccount.getInterestRate());
-//                    System.out.println(reviverAccount.getOwner());
-//                    System.out.println(reviverAccount.getBalance());
-//                    if (reviverAccount instanceof SavingAccount) {
-//                        SavingAccount sa = (SavingAccount) reviverAccount;
-//                        System.out.println("Withdraw Limit: " + sa.getWithdrawLimit());
-//                    }
-
-
                     System.out.println("Enter the amount to be Transfer :");
                     double transfer = input.nextDouble();
-
-
 
                     input.nextLine();
 
@@ -243,10 +205,10 @@ public class BankApp {
                     String transferActionId = input.nextLine();
 
                     LocalDateTime tdate = LocalDateTime.now();
-
                     Account tfromAccount = account;
 
-                    bankService.transfer(transferActionId,transfer,tdate,account,reviverAccount,"PENDING");
+                    bankService.transferMoney(transferActionId, transfer, account, reviverAccount);
+
                     break;
 
 
@@ -257,24 +219,36 @@ public class BankApp {
                     }
                     System.out.println("Enter your account number");
                     int accNo = input.nextInt();
+
                     account = null;
+
                     account = customer.selectAccount(accNo);
+
                     if(account == null) {
                         System.out.println("Not found account");
                         break;
                     }
+
                     System.out.println("Account autherized sucessfully");
                     break;
 
+
                 case 9:
+                    System.out.println("----Calculate Interest----");
+                    if(customer == null || account == null){
+                        System.out.println("Not found registered user or account");
+                        break;
+                    }
+                    System.out.println("Your annual interest is "+account.calculateInterestStrutegy());
+                    break;
+
+
+                case 10:
                     customer = null;
                     account = null;
                     System.out.println(" Logged out successfully.");
                     break;
-
-
             }
         }
-
     }
 }
